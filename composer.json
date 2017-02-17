@@ -1,12 +1,21 @@
 {
-    "require": {
-    },
-    "require-dev":{
+    "name": "ghopper/nested_set",
+    "description": "Tiny class which provides basic functions for manipulation with 'Nested Set' database tree.",
+    "license": "MIT",
+    "keywords": ["Nested Set"],
+    "authors": [
+        {
+            "name": "Nikolay Poryadin",
+            "email": "np25071984@gmail.com"
+        }
+    ],
+    "require": {},
+    "require-dev": {
         "phpunit/phpunit": "^6.0"
     },
     "autoload": {
         "psr-4": {
             "ghopper\\": "src"
         }
-    }    
+    }
 }

@@ -1,10 +1,8 @@
 # nested_set
-Nested set tree management
+Tiny class which provides basic functions for manipulation with "Nested Set" database tree.
 
 ## Preparing
-
 Create the database table
-
 ```
 DROP TABLE IF EXISTS ns_tree;
 CREATE TABLE ns_tree (
@@ -17,8 +15,8 @@ CREATE TABLE ns_tree (
 );
 INSERT INTO ns_tree (lft,rgt,name,link) VALUES(1,2,'root','root_link');
 ```
-## Configuring
 
+## Configuring
 ```
 $aConig = array(
     'tb_name' => 'ns_tree',
@@ -31,6 +29,7 @@ $aConig = array(
     )
 );
 ```
+
 ## Usage
 ```
 $ns = new CNestedSet($pdo, $aConig);
