@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<dataset>
+    <table name="tree">
+        <column>id</column>
+        <column>lft</column>
+        <column>rgt</column>
+        <column>name</column>
+        <column>link</column>
+        <row>
+            <value>1</value>
+            <value>1</value>
+            <value>2</value>
+            <value>root node</value>
+            <value>root node link</value>
+        </row>
+    </table>
+</dataset>

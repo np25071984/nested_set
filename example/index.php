@@ -41,7 +41,7 @@ echo "Nested sets class testing<br />";
 
 $dsn = 'mysql:host=localhost;dbname=test;charset=utf8';
 try {
-    $pdo = new PDO(
+    $pdo = new \PDO(
         $dsn,
         'root',
         '',
@@ -72,7 +72,7 @@ $q = <<<EOD
 INSERT INTO ns_tree (lft,rgt,name,link) VALUES(1,2,'root','root_link');
 EOD;
 $pdo->query($q);
-
+// exit;
 $aConf = array(
     'tb_extra_fields'=> array(
         'name',

@@ -1,29 +1,6 @@
 <?php
 namespace ghopper;
 
-/*
-TODO:
-===
-
-REQUIRE:
-- DB with transactions support (Mysql InnoDB)
-- DBO connection with PDO::ATTR_ERRMODE=PDO::ERRMODE_EXCEPTION attribute
-===
-
-DROP TABLE IF EXISTS ns_tree;
-
-CREATE TABLE ns_tree (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    lft INT NOT NULL,
-    rgt INT NOT NULL,
-    -- you can add whatever you want such as 'name','description','link' etc
-    name VARCHAR(20),
-    link VARCHAR(20)
-);
-
-INSERT INTO ns_tree (lft,rgt,name) VALUES(1,2,'root');
-*/
-
 interface INestedSet
 {
     /*
@@ -82,8 +59,10 @@ class CNestedSet implements INestedSet
     private $pdo;
 
     function __construct(\PDO $pdo, $config = []) {
-        if ($pdo)
+        if ($pdo) {
+            $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->pdo = $pdo;
+        }
         else
             throw new NestedSetException('You have to pass PDO connection!');
 
