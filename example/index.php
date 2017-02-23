@@ -151,6 +151,9 @@ try {
         'link' => 'cream_link'
     ));
     printTree($ns->getTree(1));
+    
+    echo "Move 'cat#1' tree";
+    $ns->moveTree(5, 2);
 
     echo "Delete 'dog' node:";
     $ns->deleteNode($dog_id);

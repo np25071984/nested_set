@@ -20,6 +20,16 @@ interface INestedSet
      * @throw NestedSetException
      */
     function addChild($parent_id, $values);
+    
+    /*
+     * Change the tree's parent node.
+     *
+     * @param int $cur_parent_id
+     * @param int $new_parent_id
+     * @return void
+     * @throw NestedSetException
+     */
+    function moveTree($cur_parent_id, $new_parent_id);
 
     /*
      * Delete node with all descendants
@@ -185,6 +195,114 @@ class CNestedSet implements INestedSet
         $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
         
         return $last_id;
+    }
+    
+    function moveTree($cur_parent_id, $new_parent_id) {
+        if (!$this->_isNodeExists($cur_parent_id))
+            throw new NestedSetException('Current node doesn\'t exist!');
+        if (!$this->_isNodeExists($new_parent_id))
+            throw new NestedSetException('New parent node doesn\'t exist!');
+
+        if ($cur_parent_id != $new_parent_id) {
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
+    
+            $this->pdo->beginTransaction();
+            $this->pdo->exec("LOCK TABLES {$this->tbName} WRITE");
+    
+            try {
+                $q = sprintf("
+                    SELECT {$this->tbRight} AS rgt
+                    FROM {$this->tbName}
+                    WHERE {$this->tbId} = %d",
+                    $new_parent_id
+                );
+                $iNewParentRight = $this
+                    ->pdo
+                    ->query($q)
+                    ->fetchAll(\PDO::FETCH_ASSOC)[0]['rgt'];
+    
+                $q = sprintf("
+                    SELECT 
+                        {$this->tbLeft} AS iCurLeft,
+                        {$this->tbRight} AS iCurRight
+                    FROM {$this->tbName}
+                    WHERE {$this->tbId} = %d",
+                    $cur_parent_id
+                );
+                extract($this
+                    ->pdo
+                    ->query($q)
+                    ->fetchAll(\PDO::FETCH_ASSOC)[0]);
+    
+                unset($q);
+                if ($iNewParentRight < $iCurLeft) {
+                    $q = "
+                        UPDATE {$this->tbName}
+                        SET {$this->tbLeft} = {$this->tbLeft} + 
+                        CASE
+                            WHEN {$this->tbLeft}
+                                BETWEEN {$iCurLeft} AND {$iCurRight}
+                            THEN {$iNewParentRight} - {$iCurLeft}
+                            WHEN {$this->tbLeft}
+                                BETWEEN {$iNewParentRight} AND {$iCurLeft} - 1
+                            THEN {$iCurRight} - {$iCurLeft} + 1
+                            ELSE 0
+                        END,
+                        {$this->tbRight} = {$this->tbRight} + 
+                        CASE
+                            WHEN {$this->tbRight}
+                                BETWEEN {$iCurLeft} AND {$iCurRight}
+                            THEN {$iNewParentRight} - {$iCurLeft}
+                            WHEN {$this->tbRight}
+                                BETWEEN {$iNewParentRight} AND {$iCurLeft} - 1
+                            THEN {$iCurRight} - {$iCurLeft} + 1
+                            ELSE 0
+                        END
+                        WHERE {$this->tbLeft} 
+                            BETWEEN {$iNewParentRight} AND {$iCurRight}
+                        OR {$this->tbRight}
+                            BETWEEN {$iNewParentRight} AND {$iCurRight}";
+                }
+                else {
+                    $q = "
+                        UPDATE {$this->tbName}
+                        SET {$this->tbLeft} = {$this->tbLeft} + 
+                        CASE
+                            WHEN {$this->tbLeft}
+                                BETWEEN {$iCurLeft} AND {$iCurRight}
+                            THEN {$iNewParentRight} - {$iCurRight} - 1
+                            WHEN {$this->tbLeft}
+                                BETWEEN {$iCurRight} + 1 AND {$iNewParentRight} - 1
+                            THEN {$iCurLeft} - {$iCurRight} - 1
+                            ELSE 0
+                        END,
+                        {$this->tbRight} = {$this->tbRight} + 
+                        CASE
+                            WHEN {$this->tbRight}
+                                BETWEEN {$iCurLeft} AND {$iCurRight}
+                            THEN {$iNewParentRight} - {$iCurRight} - 1
+                            WHEN {$this->tbRight}
+                                BETWEEN {$iCurRight} + 1 AND {$iNewParentRight} - 1
+                            THEN {$iCurLeft} - {$iCurRight} - 1
+                            ELSE 0
+                        END
+                        WHERE {$this->tbLeft} 
+                            BETWEEN {$iCurLeft} AND {$iNewParentRight}
+                        OR {$this->tbRight}
+                            BETWEEN {$iCurLeft} AND {$iNewParentRight}";
+                }
+                $this->pdo->query($q);
+                $this->pdo->commit();
+            } catch (\PDOException $ex) {
+                $this->pdo->rollBack();
+                throw new NestedSetException($ex);
+            } finally {
+                $this->pdo->exec('UNLOCK TABLES');
+            }
+        
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
+            
+        }
     }
     
     function deleteTree($node_id) {

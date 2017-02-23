@@ -67,6 +67,7 @@ Look at the *examples* folder for more information.
 ## Available methods
  * getTree($parent_id) - return all descendants of $parent_id node
  * addChild($parent_id, $values) - add a new node to $parent_id which contains $values
+ * moveTree($cur_parent_id, $new_parent_id) - move the whole tree to a new parent
  * deleteTree($node_id) - delete $node_id with all descendants
  * deleteNode($node_id) - delete $node_id only and shift the descendants to level up
 
