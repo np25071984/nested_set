@@ -20,7 +20,17 @@ interface INestedSet
      * @throw NestedSetException
      */
     function addChild($parent_id, $values);
-    
+
+    /*
+     * Add the first child node to the root element
+     *
+     * @param int $parent_id
+     * @param array $values
+     * @return array
+     * @throw NestedSetException
+     */
+    function addRootChild($values);
+
     /*
      * Change the tree's parent node.
      *
@@ -125,7 +135,7 @@ class CNestedSet implements INestedSet
         return $this->pdo->query($q)->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    function addChild($parent_id, $values) {
+    function addChild($parent_id, $values = array()) {
         if (!$this->_isNodeExists($parent_id))
             throw new NestedSetException('Node doesn\'t exist!');
 
@@ -196,7 +206,21 @@ class CNestedSet implements INestedSet
         
         return $last_id;
     }
-    
+
+    function addRootChild($values = array()) {
+        $q = "
+            SELECT {$this->tbId} AS id
+            FROM {$this->tbName}
+            ORDER BY {$this->tbLeft}
+            LIMIT 1";
+        $rootId = $this
+            ->pdo
+            ->query($q)
+            ->fetchAll(\PDO::FETCH_ASSOC)[0]['id'];
+
+        return $this->addChild($rootId, $values);
+    }
+
     function moveTree($cur_parent_id, $new_parent_id) {
         if (!$this->_isNodeExists($cur_parent_id))
             throw new NestedSetException('Current node doesn\'t exist!');

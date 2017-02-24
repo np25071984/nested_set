@@ -28,7 +28,7 @@ $pdo = new \PDO(DB_CONN_STRING, DB_USER, DB_PASS,
 
 ## Configuring
 ```
-$aConig = array(
+$aConfig = array(
     'tb_name' => 'ns_tree',
     'tb_field_index'=> 'id',
     'tb_field_left' => 'lft',
@@ -44,7 +44,7 @@ $aConig = array(
 
 ### create the object
 ```
-$ns = new CNestedSet($pdo, $aConig);
+$ns = new CNestedSet($pdo, $aConfig);
 ```
 
 ### add new node
@@ -67,6 +67,7 @@ Look at the *examples* folder for more information.
 ## Available methods
  * getTree($parent_id) - return all descendants of $parent_id node
  * addChild($parent_id, $values) - add a new node to $parent_id which contains $values
+ * addRootChild($values) - add new node to the root element
  * moveTree($cur_parent_id, $new_parent_id) - move the whole tree to a new parent
  * deleteTree($node_id) - delete $node_id with all descendants
  * deleteNode($node_id) - delete $node_id only and shift the descendants to level up
