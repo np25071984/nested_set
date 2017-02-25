@@ -76,7 +76,7 @@ class CNestedSet implements INestedSet
     private $tbrgt;
     private $sFields;
 
-    private $pdo;
+    protected $pdo;
 
     private $isAutocommit;
 
