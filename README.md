@@ -25,7 +25,6 @@ $pdo = new \PDO(DB_CONN_STRING, DB_USER, DB_PASS,
 
 ```
 
-
 ## Configuring
 ```
 $aConfig = array(

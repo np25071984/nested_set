@@ -168,7 +168,6 @@ try {
         'name' => 'root child'
     ));
     printTree($ns->getTree(1));
-    
 } catch (NestedSetException $ex) {
     echo "NestedSetException!<br />";
     var_dump($ex);

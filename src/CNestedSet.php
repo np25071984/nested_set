@@ -78,6 +78,8 @@ class CNestedSet implements INestedSet
 
     private $pdo;
 
+    private $isAutocommit;
+
     function __construct(\PDO $pdo, $config = []) {
         if ($pdo) {
             $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -85,6 +87,8 @@ class CNestedSet implements INestedSet
         }
         else
             throw new NestedSetException('You have to pass PDO connection!');
+
+        $this->isAutocommit = $this->pdo->getAttribute(\PDO::ATTR_AUTOCOMMIT);
 
         $this->config = array_merge($this->config, $config);
 
@@ -141,9 +145,16 @@ class CNestedSet implements INestedSet
 
         $last_id = FALSE;
         
-        $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
+        if ($this->isAutocommit)
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
 
-        $this->pdo->beginTransaction();
+        If (!$this->pdo->inTransaction()) {
+            $isTransaction = TRUE;
+            $this->pdo->beginTransaction();
+        }
+        else
+            $isTransaction = FALSE;
+            
         $this->pdo->exec("LOCK TABLES {$this->tbName} WRITE");
 
         try {
@@ -194,15 +205,18 @@ class CNestedSet implements INestedSet
             $this->pdo->query($q);
             $last_id = $this->pdo->lastInsertId();
 
-            $this->pdo->commit();
+            if ($isTransaction) 
+                $this->pdo->commit();
         } catch (\PDOException $ex) {
-            $this->pdo->rollBack();
+            if ($isTransaction)
+                $this->pdo->rollBack();
             throw new NestedSetException($ex);
         } finally {
             $this->pdo->exec('UNLOCK TABLES');
         }
         
-        $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
+        if ($this->isAutocommit)
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
         
         return $last_id;
     }
@@ -228,11 +242,18 @@ class CNestedSet implements INestedSet
             throw new NestedSetException('New parent node doesn\'t exist!');
 
         if ($cur_parent_id != $new_parent_id) {
-            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
+            if ($this->isAutocommit)
+                $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
     
-            $this->pdo->beginTransaction();
+            If (!$this->pdo->inTransaction()) {
+                $isTransaction = TRUE;
+                $this->pdo->beginTransaction();
+            }
+            else
+                $isTransaction = FALSE;
+
             $this->pdo->exec("LOCK TABLES {$this->tbName} WRITE");
-    
+
             try {
                 $q = sprintf("
                     SELECT {$this->tbRight} AS rgt
@@ -316,15 +337,19 @@ class CNestedSet implements INestedSet
                             BETWEEN {$iCurLeft} AND {$iNewParentRight}";
                 }
                 $this->pdo->query($q);
-                $this->pdo->commit();
+
+                if ($isTransaction)
+                    $this->pdo->commit();
             } catch (\PDOException $ex) {
-                $this->pdo->rollBack();
+                if ($isTransaction)
+                    $this->pdo->rollBack();
                 throw new NestedSetException($ex);
             } finally {
                 $this->pdo->exec('UNLOCK TABLES');
             }
-        
-            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
+
+            if ($this->isAutocommit)
+                $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
             
         }
     }
@@ -333,9 +358,16 @@ class CNestedSet implements INestedSet
         if (!$this->_isNodeExists($node_id))
             throw new NestedSetException('Node doesn\'t exist!');
 
-        $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
+        if ($this->isAutocommit)
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
 
-        $this->pdo->beginTransaction();
+        If (!$this->pdo->inTransaction()) {
+            $isTransaction = TRUE;
+            $this->pdo->beginTransaction();
+        }
+        else
+            $isTransaction = FALSE;
+
         $this->pdo->exec("LOCK TABLES {$this->tbName} WRITE");
 
         try {
@@ -376,25 +408,35 @@ class CNestedSet implements INestedSet
                 $rgt
             );
             $this->pdo->query($q);
-        
-            $this->pdo->commit();
+
+            if ($isTransaction)
+                $this->pdo->commit();
         } catch (\PDOException $ex) {
-            $this->pdo->rollBack();
+            if ($isTransaction)
+                $this->pdo->rollBack();
             throw new NestedSetException($ex);
         } finally {
             $this->pdo->exec('UNLOCK TABLES');
         }
-        
-        $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
+
+        if ($this->isAutocommit)
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
     }
 
     function deleteNode($node_id) {
         if (!$this->_isNodeExists($node_id))
             throw new NestedSetException('Node doesn\'t exist!');
 
-        $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
+        if ($this->isAutocommit)
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, FALSE);
 
-        $this->pdo->beginTransaction();
+        If (!$this->pdo->inTransaction()) {
+            $isTransaction = TRUE;
+            $this->pdo->beginTransaction();
+        }
+        else
+            $isTransaction = FALSE;
+
         $this->pdo->exec("LOCK TABLES {$this->tbName} WRITE");
 
         try {
@@ -440,15 +482,19 @@ class CNestedSet implements INestedSet
                 $rgt
             );
             $this->pdo->query($q);
-            $this->pdo->commit();
+
+            if ($isTransaction)
+                $this->pdo->commit();
         } catch (\PDOException $ex) {
-            $this->pdo->rollBack();
+            if ($isTransaction)
+                $this->pdo->rollBack();
             throw new NestedSetException($ex);
         } finally {
             $this->pdo->exec('UNLOCK TABLES');
         }
-        
-        $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
+
+        if ($this->isAutocommit)
+            $this->pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, TRUE);
     }
 }
 
