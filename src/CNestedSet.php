@@ -116,26 +116,69 @@ class CNestedSet implements INestedSet
         else
             return TRUE;
     }
+    
+    private function _getRootNodeId() {
+        $q = "
+            SELECT {$this->tbId} AS id
+            FROM {$this->tbName}
+            ORDER BY {$this->tbLeft}
+            LIMIT 1";
+        $rootId = $this
+            ->pdo
+            ->query($q)
+            ->fetchAll(\PDO::FETCH_ASSOC)[0]['id'];
 
-    function getTree($parent_id) {
-        if (!$this->_isNodeExists($parent_id))
-            throw new NestedSetException('Node doesn\'t exist!');
+        return $rootId;
+    }
 
-        $q = sprintf("
-            SELECT node.*, (COUNT(parent.{$this->tbId}) - 1) AS depth
-            FROM
-                {$this->tbName} AS node,
-                {$this->tbName} AS parent
-            WHERE node.{$this->tbLeft}
-                BETWEEN parent.{$this->tbLeft} AND parent.{$this->tbRight}
-            AND parent.{$this->tbLeft} >= (
-                SELECT {$this->tbLeft} 
-                FROM {$this->tbName} 
-                WHERE {$this->tbId}=%d)
-            GROUP BY node.{$this->tbId}
-            ORDER BY node.{$this->tbLeft}",
-            $parent_id
-        );
+    function getTree($parent_id = NULL) {
+        if ($parent_id === NULL) {
+            // $parent_id = $this->_getRootNodeId();
+            $q = "
+                SELECT node.*, (COUNT(parent.{$this->tbId}) - 1) AS depth
+                FROM
+                    {$this->tbName} AS node,
+                    {$this->tbName} AS parent
+                WHERE node.{$this->tbLeft}
+                    BETWEEN parent.{$this->tbLeft} AND parent.{$this->tbRight}
+                GROUP BY node.{$this->tbId}
+                ORDER BY node.{$this->tbLeft}";            
+        }
+        else {
+            if (!$this->_isNodeExists($parent_id))
+                throw new NestedSetException('Node doesn\'t exist!');
+
+            $q = sprintf("
+                SELECT
+                    node.*,
+                    (COUNT(parent.{$this->tbId}) - (sub_tree.depth + 1)) AS depth
+                FROM {$this->tbName} AS node,
+                    {$this->tbName} AS parent,
+                    {$this->tbName} AS sub_parent,
+                    (
+                        SELECT node.*,
+                        (COUNT(parent.id) - 1) AS depth
+                        FROM {$this->tbName} AS node,
+                            {$this->tbName} AS parent
+                        WHERE node.{$this->tbLeft}
+                            BETWEEN parent.{$this->tbLeft}
+                            AND parent.{$this->tbRight}
+                        AND node.{$this->tbId} = %d
+                        GROUP BY node.id
+                        ORDER BY node.{$this->tbLeft}
+                    ) AS sub_tree
+                WHERE node.{$this->tbLeft} 
+                    BETWEEN parent.{$this->tbLeft} AND parent.{$this->tbRight}
+                        AND node.{$this->tbLeft}
+                            BETWEEN sub_parent.{$this->tbLeft} 
+                            AND sub_parent.{$this->tbRight}
+                        AND sub_parent.{$this->tbId} = sub_tree.{$this->tbId}
+                GROUP BY node.{$this->tbId}
+                ORDER BY node.{$this->tbLeft};",
+                $parent_id
+            );
+        }
+
         return $this->pdo->query($q)->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -222,15 +265,7 @@ class CNestedSet implements INestedSet
     }
 
     function addRootChild($values = array()) {
-        $q = "
-            SELECT {$this->tbId} AS id
-            FROM {$this->tbName}
-            ORDER BY {$this->tbLeft}
-            LIMIT 1";
-        $rootId = $this
-            ->pdo
-            ->query($q)
-            ->fetchAll(\PDO::FETCH_ASSOC)[0]['id'];
+        $rootId = $this->_getRootNodeId();
 
         return $this->addChild($rootId, $values);
     }

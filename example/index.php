@@ -161,13 +161,13 @@ try {
 
     echo "Delete 'cat#1' tree:";
     $ns->deleteTree($cat1_id);
-    printTree($ns->getTree(1));
+    printTree($ns->getTree());
     
     echo "Add to root element:";
     $ns->addRootChild(array(
         'name' => 'root child'
     ));
-    printTree($ns->getTree(1));
+    printTree($ns->getTree(11));
 } catch (NestedSetException $ex) {
     echo "NestedSetException!<br />";
     var_dump($ex);
