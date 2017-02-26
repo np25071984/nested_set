@@ -62,7 +62,7 @@ interface INestedSet
 
 class CNestedSet implements INestedSet
 {
-    private $config = array(
+    protected $config = array(
         'tb_name' => 'ns_tree',
         'tb_field_index'=> 'id',
         'tb_field_left' => 'lft',
@@ -70,15 +70,15 @@ class CNestedSet implements INestedSet
         'tb_extra_fields'=> array()
     );
 
-    private $tbName;
-    private $tbId;
-    private $tblft;
-    private $tbrgt;
-    private $sFields;
+    protected $tbName;
+    protected $tbId;
+    protected $tblft;
+    protected $tbrgt;
+    protected $sFields;
 
     protected $pdo;
 
-    private $isAutocommit;
+    protected $isAutocommit;
 
     function __construct(\PDO $pdo, $config = []) {
         if ($pdo) {
@@ -174,7 +174,7 @@ class CNestedSet implements INestedSet
                             AND sub_parent.{$this->tbRight}
                         AND sub_parent.{$this->tbId} = sub_tree.{$this->tbId}
                 GROUP BY node.{$this->tbId}
-                ORDER BY node.{$this->tbLeft};",
+                ORDER BY node.{$this->tbLeft}",
                 $parent_id
             );
         }
