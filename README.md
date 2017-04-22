@@ -1,5 +1,5 @@
 # nested_set
-Tiny class which provides basic functions for manipulation with "Nested Set" database tree.
+Tiny class which provides basic functions for manipulating with "Nested Set" database tree.
 
 ## Preparing
 Create the database table

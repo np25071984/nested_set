@@ -1,4 +1,6 @@
 <?php
+// http://mikehillyer.com/articles/managing-hierarchical-data-in-mysql/
+
 namespace ghopper;
 
 interface INestedSet
